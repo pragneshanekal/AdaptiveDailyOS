@@ -12,15 +12,7 @@ struct OnboardingCompleteScreen: View {
     private let suggested = HabitScheduler.suggestedHabits
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color.accentColor.opacity(0.12), Color(.systemBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 Spacer()
 
                 VStack(spacing: 28) {
@@ -84,8 +76,15 @@ struct OnboardingCompleteScreen: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)
-            }
         }
+        .background(
+            LinearGradient(
+                colors: [Color.accentColor.opacity(0.12), Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .onAppear { isAnimating = true }
     }
 
