@@ -10,9 +10,13 @@ import SwiftData
 
 @main
 struct AdaptiveDailyOSApp: App {
+    @State private var appState = AppState()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            HabitTemplate.self,
+            DailyHabit.self,
+            CompletionLog.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +29,8 @@ struct AdaptiveDailyOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(appState)
         }
         .modelContainer(sharedModelContainer)
     }
