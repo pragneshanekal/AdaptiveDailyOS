@@ -10,6 +10,8 @@ struct MainTabView: View {
                 .tabItem { Label("Habits", systemImage: "list.bullet.rectangle") }
             ProgressView()
                 .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
+            SettingsView()
+                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
     }
 }
