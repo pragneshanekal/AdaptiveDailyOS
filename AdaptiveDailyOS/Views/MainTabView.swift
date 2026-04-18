@@ -6,6 +6,8 @@ struct MainTabView: View {
         TabView {
             TodayView()
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
+            HabitsView()
+                .tabItem { Label("Habits", systemImage: "list.bullet.rectangle") }
             ProgressView()
                 .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
         }
