@@ -9,6 +9,7 @@ struct TodayView: View {
 
     @State private var habitForLogging: DailyHabit?
     @State private var showingPlanReview: Bool = false
+    @State private var planDetailFor: WeeklyPlan?
 
     @Query private var weekPlans: [WeeklyPlan]
 
@@ -52,6 +53,9 @@ struct TodayView: View {
             .sheet(isPresented: $showingPlanReview) {
                 WeeklyPlanReviewSheet()
             }
+            .sheet(item: $planDetailFor) { plan in
+                WeeklyPlanDetailView(plan: plan)
+            }
         }
     }
 
@@ -61,17 +65,27 @@ struct TodayView: View {
     private var planBanner: some View {
         if let acceptedPlan {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(Color.accentColor)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("This week's plan is active")
-                        .font(.footnote)
-                        .fontWeight(.medium)
-                    Text("Predicted: \(Int(acceptedPlan.predictedRate * 100))% completion")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                Button {
+                    planDetailFor = acceptedPlan
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(Color.accentColor)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("This week's plan is active")
+                                .font(.footnote)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.primary)
+                            Text("Tap to view targets · \(Int(acceptedPlan.predictedRate * 100))% predicted")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
                 }
-                Spacer()
+                .buttonStyle(.plain)
+
                 Button("Regenerate") { showingPlanReview = true }
                     .font(.caption)
                     .buttonStyle(.bordered)
