@@ -8,6 +8,9 @@ struct TodayView: View {
     @Query private var todayHabits: [DailyHabit]
 
     @State private var habitForLogging: DailyHabit?
+    @State private var showingPlanReview: Bool = false
+
+    @Query private var weekPlans: [WeeklyPlan]
 
     init() {
         let startOfToday = Calendar.current.startOfDay(for: Date())
@@ -18,12 +21,16 @@ struct TodayView: View {
             },
             sort: \DailyHabit.scheduledDate
         )
+
+        let weekStart = WeeklyPlanService.weekStart(for: Date())
+        _weekPlans = Query(filter: #Predicate<WeeklyPlan> { $0.weekStart == weekStart })
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    planBanner
                     progressHeader
                     habitList
                 }
@@ -42,10 +49,75 @@ struct TodayView: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
             }
+            .sheet(isPresented: $showingPlanReview) {
+                WeeklyPlanReviewSheet()
+            }
         }
     }
 
     // MARK: - Subviews
+
+    @ViewBuilder
+    private var planBanner: some View {
+        if let acceptedPlan {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(Color.accentColor)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("This week's plan is active")
+                        .font(.footnote)
+                        .fontWeight(.medium)
+                    Text("Predicted: \(Int(acceptedPlan.predictedRate * 100))% completion")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Regenerate") { showingPlanReview = true }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.accentColor.opacity(0.08))
+            )
+        } else {
+            Button {
+                showingPlanReview = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Plan your week with AI")
+                            .fontWeight(.semibold)
+                        Text("Adjust targets based on recent history")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.accentColor.opacity(0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .strokeBorder(Color.accentColor.opacity(0.3), lineWidth: 1)
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var acceptedPlan: WeeklyPlan? {
+        weekPlans.first(where: { $0.acceptedAt != nil })
+    }
 
     private var progressHeader: some View {
         HStack(spacing: 24) {
