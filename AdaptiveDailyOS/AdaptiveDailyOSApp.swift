@@ -17,6 +17,8 @@ struct AdaptiveDailyOSApp: App {
             HabitTemplate.self,
             DailyHabit.self,
             CompletionLog.self,
+            WeeklyPlan.self,
+            AdaptationEvent.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
