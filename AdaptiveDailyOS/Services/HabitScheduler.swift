@@ -71,14 +71,34 @@ struct HabitScheduler {
                 .compactMap { $0.template?.id }
         )
 
+        let activePlanTargets = planTargets(on: startOfDay, context: context)
+
         for template in scheduled where !alreadyScheduledTemplateIds.contains(template.id) {
+            let planned = activePlanTargets[template.id]
+            let adaptedTarget = planned?.target ?? template.targetValue
+            let adaptedReason = planned?.reason ?? ""
             let dailyHabit = DailyHabit(
                 scheduledDate: startOfDay,
-                adaptedTarget: template.targetValue,
+                adaptedTarget: adaptedTarget,
+                adaptedReason: adaptedReason,
                 template: template
             )
             context.insert(dailyHabit)
         }
+    }
+
+    // If an accepted weekly plan covers `date`, returns per-template target
+    // overrides from that plan. Unknown template ids in the plan are ignored.
+    private static func planTargets(on date: Date, context: ModelContext) -> [UUID: (target: Double, reason: String)] {
+        guard let plan = WeeklyPlanService.activePlan(on: date, context: context) else { return [:] }
+        guard let data = plan.aiPlanSnapshot.data(using: .utf8) else { return [:] }
+        guard let decoded = try? JSONDecoder().decode(PlanSuggestion.self, from: data) else { return [:] }
+
+        var result: [UUID: (Double, String)] = [:]
+        for habit in decoded.habits {
+            result[habit.templateId] = (habit.suggestedTarget, habit.rationale)
+        }
+        return result
     }
 
     // Marks any DailyHabits from before `date` that are still .pending as .missed.
