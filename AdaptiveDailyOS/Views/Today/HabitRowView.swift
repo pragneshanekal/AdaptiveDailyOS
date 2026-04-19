@@ -99,11 +99,25 @@ struct HabitRowView: View {
     }
 
     private var targetLabel: String {
-        let target = dailyHabit.adaptedTarget
-        let unit   = dailyHabit.template?.unit ?? ""
-        let value  = target.truncatingRemainder(dividingBy: 1) == 0
-            ? String(Int(target)) : String(target)
-        return "\(value) \(unit)"
+        let unit = dailyHabit.template?.unit ?? ""
+        if dailyHabit.status == .completed, let logged = latestLoggedValue {
+            let loggedStr = format(logged)
+            if logged == dailyHabit.adaptedTarget {
+                return "\(loggedStr) \(unit)"
+            }
+            return "\(loggedStr) \(unit) · target \(format(dailyHabit.adaptedTarget))"
+        }
+        return "\(format(dailyHabit.adaptedTarget)) \(unit)"
+    }
+
+    private var latestLoggedValue: Double? {
+        dailyHabit.completionLogs
+            .sorted { $0.completedAt > $1.completedAt }
+            .first?.valueLogged
+    }
+
+    private func format(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(value)) : String(format: "%.1f", value)
     }
 
     private var accessibilityLabel: String {
