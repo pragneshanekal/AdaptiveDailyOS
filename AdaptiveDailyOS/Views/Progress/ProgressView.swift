@@ -9,6 +9,8 @@ struct ProgressView: View {
 
     @Query private var allDailyHabits: [DailyHabit]
 
+    @State private var showingHistoryCalendar = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -23,6 +25,9 @@ struct ProgressView: View {
             }
             .navigationTitle("Progress")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingHistoryCalendar) {
+                HistoryCalendarView()
+            }
         }
     }
 
@@ -30,11 +35,19 @@ struct ProgressView: View {
 
     private var statsRow: some View {
         HStack(spacing: 12) {
-            StatTile(
-                value: "\(weeklyCompletionPercent)%",
-                label: "This week",
-                icon: "calendar.badge.checkmark"
-            )
+            Button {
+                showingHistoryCalendar = true
+            } label: {
+                StatTile(
+                    value: "\(weeklyCompletionPercent)%",
+                    label: "This week",
+                    icon: "calendar.badge.checkmark",
+                    showsChevron: true
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens history calendar")
+
             StatTile(
                 value: "\(allCompletionLogs.count)",
                 label: "All-time logs",
@@ -66,13 +79,22 @@ private struct StatTile: View {
     let value: String
     let label: String
     let icon: String
+    var showsChevron: Bool = false
 
     var body: some View {
         VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.subheadline)
-                .foregroundStyle(Color.accentColor)
-                .accessibilityHidden(true)
+            ZStack {
+                Image(systemName: icon)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.accentColor)
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .offset(x: 14, y: -8)
+                }
+            }
+            .accessibilityHidden(true)
             Text(value)
                 .font(.title3)
                 .fontWeight(.bold)
