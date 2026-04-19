@@ -80,7 +80,7 @@ struct WeeklyBarChartView: View {
         Chart {
             ForEach(dailyData) { day in
                 BarMark(
-                    x: .value("Day", day.label),
+                    x: .value("Day", day.id, unit: .day),
                     y: .value("Completion", day.rate)
                 )
                 .foregroundStyle(
@@ -100,6 +100,11 @@ struct WeeklyBarChartView: View {
                             .font(.caption2)
                             .foregroundStyle(Color(.secondaryLabel))
                     }
+            }
+        }
+        .chartXAxis {
+            AxisMarks(values: dailyData.map(\.id)) { value in
+                AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
             }
         }
         .chartYScale(domain: 0...1)
@@ -124,8 +129,8 @@ struct WeeklyBarChartView: View {
                             .onEnded { value in
                                 guard let plotFrame = proxy.plotFrame else { return }
                                 let xInPlot = value.location.x - geo[plotFrame].origin.x
-                                guard let label: String = proxy.value(atX: xInPlot) else { return }
-                                if let day = dailyData.first(where: { $0.label == label }),
+                                guard let date: Date = proxy.value(atX: xInPlot) else { return }
+                                if let day = dailyData.first(where: { calendar.isDate($0.id, inSameDayAs: date) }),
                                    day.total > 0 {
                                     dayDetail = day.id
                                 }
