@@ -10,6 +10,8 @@ struct TodayView: View {
     @State private var habitForLogging: DailyHabit?
     @State private var showingPlanReview: Bool = false
     @State private var planDetailFor: WeeklyPlan?
+    @State private var adaptationCandidates: [StruggleCandidate] = []
+    @State private var showingAdaptationReview: Bool = false
 
     @Query private var weekPlans: [WeeklyPlan]
 
@@ -31,6 +33,7 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    adaptationBanner
                     planBanner
                     progressHeader
                     habitList
@@ -44,6 +47,7 @@ struct TodayView: View {
             .onAppear {
                 HabitScheduler.scheduleHabitsForDate(Date(), context: modelContext)
                 HabitScheduler.markMissedHabits(before: Date(), context: modelContext)
+                checkForAdaptations()
             }
             .sheet(item: $habitForLogging) { habit in
                 LogHabitSheet(dailyHabit: habit)
@@ -56,10 +60,49 @@ struct TodayView: View {
             .sheet(item: $planDetailFor) { plan in
                 WeeklyPlanDetailView(plan: plan)
             }
+            .sheet(isPresented: $showingAdaptationReview) {
+                AdaptationReviewSheet(candidates: adaptationCandidates)
+            }
         }
     }
 
     // MARK: - Subviews
+
+    @ViewBuilder
+    private var adaptationBanner: some View {
+        if !adaptationCandidates.isEmpty {
+            Button {
+                showingAdaptationReview = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "arrow.down.right.circle.fill")
+                        .foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ease up this week?")
+                            .font(.footnote)
+                            .fontWeight(.semibold)
+                        Text("\(adaptationCandidates.count) habit\(adaptationCandidates.count == 1 ? "" : "s") could use gentler targets")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.orange.opacity(0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(Color.orange.opacity(0.3), lineWidth: 1)
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
 
     @ViewBuilder
     private var planBanner: some View {
@@ -200,6 +243,10 @@ struct TodayView: View {
         HabitRowView(dailyHabit: habit) {
             habitForLogging = habit
         }
+    }
+
+    private func checkForAdaptations() {
+        adaptationCandidates = AdaptationService.struggleCandidates(context: modelContext)
     }
 
     // MARK: - Computed properties
